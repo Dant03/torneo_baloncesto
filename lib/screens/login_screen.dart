@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as flutter_provider;
+import 'package:email_validator/email_validator.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import 'home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -15,91 +14,92 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.signInWithEmail(
-      _emailController.text,
-      _passwordController.text,
-    ).then((_) {
-      if (authProvider.user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.error ?? 'Error al iniciar sesión')),
-        );
-      }
-    });
-  }
+  void _login() async {
+    final email = _emailController.text;
+    final password = _passwordController.text;
 
-  void _navigateToRegister() {
-    Navigator.pushReplacementNamed(context, '/register');
-  }
+    if (!EmailValidator.validate(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, ingresa un correo electrónico válido.')),
+      );
+      return;
+    }
 
-  void _resetPassword() {
-    // Implementar funcionalidad para restablecer la contraseña
+    final authProvider = flutter_provider.Provider.of<AuthProvider>(context, listen: false);
+    
+    try {
+      await authProvider.login(email: email, password: password);
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${error.toString()}')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.network(
-              'https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg?t=2024-06-05T06%3A06%3A18.729Z',
-              fit: BoxFit.cover,
-            ),
+      appBar: AppBar(
+        title: Text('Iniciar Sesión'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage('https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg?t=2024-06-05T06%3A06%3A18.729Z'),
+            fit: BoxFit.cover,
           ),
-          Center(
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.network(
-                    'https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/logo.png?t=2024-06-05T06%3A06%3A39.858Z',
-                    height: 100,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
+                  TextField(
                     controller: _emailController,
-                    labelText: 'Email',
+                    decoration: InputDecoration(
+                      labelText: 'Correo electrónico',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
                   ),
-                  CustomTextField(
+                  TextField(
                     controller: _passwordController,
-                    labelText: 'Password',
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: true,
                   ),
-                  CustomButton(
-                    text: 'Login',
-                    onPressed: () => _login(context),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                    ),
+                    child: Text('Iniciar sesión', style: TextStyle(color: Colors.white)),
                   ),
-                  CustomButton(
-                    text: 'Login with Biometrics',
+                  TextButton(
                     onPressed: () {
-                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                      authProvider.authenticateWithBiometrics();
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterScreen()));
                     },
-                  ),
-                  TextButton(
-                    onPressed: _navigateToRegister,
-                    child: const Text(
-                      'No tienes una cuenta? Regístrate',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _resetPassword,
-                    child: const Text(
-                      'Olvidé mi contraseña',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text('¿No tienes una cuenta? Regístrate aquí', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

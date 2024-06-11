@@ -3,30 +3,45 @@ class Match {
   final String team1Id;
   final String team2Id;
   final DateTime date;
-  final int team1Score;
-  final int team2Score;
+  final String location;
+  final int scoreTeam1;
+  final int scoreTeam2;
+  final String refereeId;
 
-  Match({required this.id, required this.team1Id, required this.team2Id, required this.date, required this.team1Score, required this.team2Score});
+  Match({
+    required this.id,
+    required this.team1Id,
+    required this.team2Id,
+    required this.date,
+    required this.location,
+    required this.scoreTeam1,
+    required this.scoreTeam2,
+    required this.refereeId,
+  });
 
   factory Match.fromMap(Map<String, dynamic> map) {
     return Match(
       id: map['id'],
-      team1Id: map['team1Id'],
-      team2Id: map['team2Id'],
+      team1Id: map['team1_id'],
+      team2Id: map['team2_id'],
       date: DateTime.parse(map['date']),
-      team1Score: map['team1Score'],
-      team2Score: map['team2Score'],
+      location: map['location'],
+      scoreTeam1: map['score_team1'],
+      scoreTeam2: map['score_team2'],
+      refereeId: map['referee_id'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'team1Id': team1Id,
-      'team2Id': team2Id,
+      'team1_id': team1Id,
+      'team2_id': team2Id,
       'date': date.toIso8601String(),
-      'team1Score': team1Score,
-      'team2Score': team2Score,
+      'location': location,
+      'score_team1': scoreTeam1,
+      'score_team2': scoreTeam2,
+      'referee_id': refereeId,
     };
   }
 }

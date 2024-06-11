@@ -1,16 +1,26 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/team.dart';
-import '../supabase_config.dart';
 
 class TeamService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Team>> getTeams() async {
-    final response = await _client.from('teams').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Team.fromMap(data)).toList();
-    } else {
-      throw response.error!;
+  Future<TeamResponse> getTeams() async {
+    final response = await _supabase.from('teams').select().execute();
+
+    if (response.error != null) {
+      return TeamResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final teams = data.map((team) => Team.fromMap(team)).toList();
+
+    return TeamResponse(data: teams);
   }
+}
+
+class TeamResponse {
+  final List<Team>? data;
+  final PostgrestError? error;
+
+  TeamResponse({this.data, this.error});
 }

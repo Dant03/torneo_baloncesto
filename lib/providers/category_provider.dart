@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/category_service.dart';
 import '../models/category.dart';
+import '../services/category_service.dart';
 
 class CategoryProvider with ChangeNotifier {
   final CategoryService _categoryService = CategoryService();
@@ -9,7 +9,12 @@ class CategoryProvider with ChangeNotifier {
   List<Category> get categories => _categories;
 
   Future<void> fetchCategories() async {
-    _categories = await _categoryService.getCategories();
-    notifyListeners();
+    final response = await _categoryService.getCategories();
+    if (response.error == null) {
+      _categories = response.data!;
+      notifyListeners();
+    } else {
+      throw Exception(response.error!.message);
+    }
   }
 }

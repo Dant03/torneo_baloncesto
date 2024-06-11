@@ -1,16 +1,26 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/referee.dart';
-import '../supabase_config.dart';
 
 class RefereeService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Referee>> getReferees() async {
-    final response = await _client.from('referees').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Referee.fromMap(data)).toList();
-    } else {
-      throw response.error!;
+  Future<RefereeResponse> getReferees() async {
+    final response = await _supabase.from('referees').select().execute();
+
+    if (response.error != null) {
+      return RefereeResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final referees = data.map((referee) => Referee.fromMap(referee)).toList();
+
+    return RefereeResponse(data: referees);
   }
+}
+
+class RefereeResponse {
+  final List<Referee>? data;
+  final PostgrestError? error;
+
+  RefereeResponse({this.data, this.error});
 }

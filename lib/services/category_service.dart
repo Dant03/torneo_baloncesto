@@ -1,16 +1,26 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/category.dart';
-import '../supabase_config.dart';
 
 class CategoryService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Category>> getCategories() async {
-    final response = await _client.from('categories').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Category.fromMap(data)).toList();
-    } else {
-      throw response.error!;
+  Future<CategoryResponse> getCategories() async {
+    final response = await _supabase.from('categories').select().execute();
+
+    if (response.error != null) {
+      return CategoryResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final categories = data.map((category) => Category.fromMap(category)).toList();
+
+    return CategoryResponse(data: categories);
   }
+}
+
+class CategoryResponse {
+  final List<Category>? data;
+  final PostgrestError? error;
+
+  CategoryResponse({this.data, this.error});
 }

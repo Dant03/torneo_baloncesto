@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
 import '../models/championship.dart';
 import '../providers/championship_provider.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/counter.dart';  // Importar el widget Counter
 
 class CreateChampionshipScreen extends StatefulWidget {
-  const CreateChampionshipScreen({Key? key}) : super(key: key);
-
   @override
   _CreateChampionshipScreenState createState() => _CreateChampionshipScreenState();
 }
@@ -15,59 +13,58 @@ class CreateChampionshipScreen extends StatefulWidget {
 class _CreateChampionshipScreenState extends State<CreateChampionshipScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _maxRegistrationDateController = TextEditingController();
-  final _startDateController = TextEditingController();
-  int _numberOfCourts = 1;
-  DateTime? _selectedMaxRegistrationDate;
-  DateTime? _selectedStartDate;
-  List<String> _selectedGameDays = [];
-  List<String> _selectedCategories = [];
+  final _locationController = TextEditingController();
+  final _tournamentFeeController = TextEditingController();
+  final _registrationFeeController = TextEditingController();
+  final _matchFeeController = TextEditingController();
+  final _numberOfCourtsController = TextEditingController();
+  DateTime? _registrationDeadline;
+  DateTime? _startDate;
+  String _daysOfWeek = '';
+  String _startTime = '';
+  String _endTime = '';
 
-  void _pickDate(BuildContext context, TextEditingController controller, Function(DateTime) onPicked) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        controller.text = picked.toIso8601String().split('T').first;
-        onPicked(picked);
-      });
-    }
+  String formatDate(DateTime date) {
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    return formatter.format(date);
   }
 
-  void _createChampionship(BuildContext context) {
-    if (_formKey.currentState!.validate() && _selectedMaxRegistrationDate != null && _selectedStartDate != null && _selectedGameDays.isNotEmpty && _selectedCategories.isNotEmpty) {
-      final championshipProvider = Provider.of<ChampionshipProvider>(context, listen: false);
-      final Map<String, Map<String, int>> categories = {
-        for (var category in _selectedCategories) category: {'min': 0, 'max': 0}
-      };
+  void _createChampionship() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        final registrationDeadline = _registrationDeadline ?? DateTime.now().add(Duration(days: 7));
+        final startDate = _startDate ?? DateTime.now().add(Duration(days: 14));
+        final tournamentFee = double.tryParse(_tournamentFeeController.text) ?? 0.0;
+        final registrationFee = double.tryParse(_registrationFeeController.text) ?? 0.0;
+        final matchFee = double.tryParse(_matchFeeController.text) ?? 0.0;
+        final numberOfCourts = int.tryParse(_numberOfCourtsController.text) ?? 0;
 
-      final championship = Championship(
-        name: _nameController.text,
-        numberOfCourts: _numberOfCourts,
-        maxRegistrationDate: _selectedMaxRegistrationDate!,
-        startDate: _selectedStartDate!,
-        gameDays: _selectedGameDays,
-        categories: categories,
-      );
-
-      championshipProvider.createChampionship(championship).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Campeonato creado exitosamente')),
+        final championship = Championship(
+          id: Uuid().v4(),
+          name: _nameController.text,
+          date: DateTime.now(),
+          location: _locationController.text,
+          registrationDeadline: registrationDeadline,
+          startDate: startDate,
+          daysOfWeek: _daysOfWeek,
+          startTime: _startTime.isNotEmpty ? _startTime : '09:00',
+          endTime: _endTime.isNotEmpty ? _endTime : '18:00',
+          tournamentFee: tournamentFee,
+          registrationFee: registrationFee,
+          matchFee: matchFee,
+          imageUrl: '',
+          numberOfCourts: numberOfCourts,
         );
+
+        final provider = Provider.of<ChampionshipProvider>(context, listen: false);
+        await provider.createChampionship(championship);
         Navigator.pop(context);
-      }).catchError((error) {
+      } catch (error) {
+        print('Error creating championship: $error');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear el campeonato: $error')),
+          SnackBar(content: Text('Error: ${error.toString()}')),
         );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, completa todos los campos')),
-      );
+      }
     }
   }
 
@@ -75,113 +72,55 @@ class _CreateChampionshipScreenState extends State<CreateChampionshipScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crear Campeonato'),
+        title: Text('Crear Campeonato'),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre del Campeonato'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Por favor, introduce un nombre para el campeonato';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Número de Canchas'),
-              Counter(
-                minValue: 1,
-                maxValue: 10,
-                initialValue: _numberOfCourts,
-                onChanged: (value) {
-                  setState(() {
-                    _numberOfCourts = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _maxRegistrationDateController,
-                decoration: const InputDecoration(labelText: 'Fecha Máxima de Inscripción'),
-                readOnly: true,
-                onTap: () => _pickDate(context, _maxRegistrationDateController, (date) {
-                  _selectedMaxRegistrationDate = date;
-                }),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Por favor, selecciona una fecha';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _startDateController,
-                decoration: const InputDecoration(labelText: 'Fecha de Inicio'),
-                readOnly: true,
-                onTap: () => _pickDate(context, _startDateController, (date) {
-                  _selectedStartDate = date;
-                }),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Por favor, selecciona una fecha';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Días de Juego'),
-              Wrap(
-                spacing: 8.0,
-                children: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-                    .map((day) => FilterChip(
-                          label: Text(day),
-                          selected: _selectedGameDays.contains(day),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedGameDays.add(day);
-                              } else {
-                                _selectedGameDays.remove(day);
-                              }
-                            });
-                          },
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              const Text('Categorías'),
-              Wrap(
-                spacing: 8.0,
-                children: ['Infantil', 'Juvenil', 'Adulto', 'Senior']
-                    .map((category) => FilterChip(
-                          label: Text(category),
-                          selected: _selectedCategories.contains(category),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedCategories.add(category);
-                              } else {
-                                _selectedCategories.remove(category);
-                              }
-                            });
-                          },
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              CustomButton(
-                text: 'Crear Campeonato',
-                onPressed: () => _createChampionship(context),
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Nombre'),
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                TextFormField(
+                  controller: _locationController,
+                  decoration: InputDecoration(labelText: 'Ubicación'),
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                TextFormField(
+                  controller: _tournamentFeeController,
+                  decoration: InputDecoration(labelText: 'Costo del torneo'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                TextFormField(
+                  controller: _registrationFeeController,
+                  decoration: InputDecoration(labelText: 'Costo de inscripción'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                TextFormField(
+                  controller: _matchFeeController,
+                  decoration: InputDecoration(labelText: 'Costo por partido'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                TextFormField(
+                  controller: _numberOfCourtsController,
+                  decoration: InputDecoration(labelText: 'Número de canchas'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                ElevatedButton(
+                  onPressed: _createChampionship,
+                  child: Text('Crear Campeonato'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

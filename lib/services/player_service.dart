@@ -1,16 +1,26 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/player.dart';
-import '../supabase_config.dart';
 
 class PlayerService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Player>> getPlayers() async {
-    final response = await _client.from('players').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Player.fromMap(data)).toList();
-    } else {
-      throw response.error!;
+  Future<PlayerResponse> getPlayers() async {
+    final response = await _supabase.from('players').select().execute();
+
+    if (response.error != null) {
+      return PlayerResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final players = data.map((player) => Player.fromMap(player)).toList();
+
+    return PlayerResponse(data: players);
   }
+}
+
+class PlayerResponse {
+  final List<Player>? data;
+  final PostgrestError? error;
+
+  PlayerResponse({this.data, this.error});
 }

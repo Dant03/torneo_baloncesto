@@ -1,68 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
 
-class CreateUserScreen extends StatefulWidget {
-  @override
-  _CreateUserScreenState createState() => _CreateUserScreenState();
-}
-
-class _CreateUserScreenState extends State<CreateUserScreen> {
+class CreateUserScreen extends StatelessWidget {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String _selectedRole = 'user';
+  final _roleController = TextEditingController();
+
+  void _createUser() {
+    if (_formKey.currentState!.validate()) {
+      // Lógica para crear usuario
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Crear Usuario'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CustomTextField(
-              controller: _emailController,
-              labelText: 'Email',
-            ),
-            CustomTextField(
-              controller: _passwordController,
-              labelText: 'Password',
-              obscureText: true,
-            ),
-            DropdownButton<String>(
-              value: _selectedRole,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedRole = newValue!;
-                });
-              },
-              items: <String>['admin', 'coach', 'player', 'viewer']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-            CustomButton(
-              text: 'Crear',
-              onPressed: () {
-                userProvider.createUser(
-                  _emailController.text,
-                  _passwordController.text,
-                  _selectedRole,
-                ).then((_) {
-                  Navigator.pop(context);
-                });
-              },
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Nombre'),
+                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+              ),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Correo electrónico'),
+                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+              ),
+              TextFormField(
+                controller: _roleController,
+                decoration: InputDecoration(labelText: 'Rol'),
+                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+              ),
+              ElevatedButton(
+                onPressed: _createUser,
+                child: Text('Crear Usuario'),
+              ),
+            ],
+          ),
         ),
       ),
     );

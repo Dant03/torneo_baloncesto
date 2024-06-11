@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/team_service.dart';
 import '../models/team.dart';
+import '../services/team_service.dart';
 
 class TeamProvider with ChangeNotifier {
   final TeamService _teamService = TeamService();
@@ -9,7 +9,12 @@ class TeamProvider with ChangeNotifier {
   List<Team> get teams => _teams;
 
   Future<void> fetchTeams() async {
-    _teams = await _teamService.getTeams();
-    notifyListeners();
+    final response = await _teamService.getTeams();
+    if (response.error == null) {
+      _teams = response.data!;
+      notifyListeners();
+    } else {
+      throw Exception(response.error!.message);
+    }
   }
 }

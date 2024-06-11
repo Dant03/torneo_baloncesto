@@ -1,15 +1,16 @@
 class Referee {
   final String id;
   final String name;
-  final List<String> matchesIds;
 
-  Referee({required this.id, required this.name, required this.matchesIds});
+  Referee({
+    required this.id,
+    required this.name,
+  });
 
   factory Referee.fromMap(Map<String, dynamic> map) {
     return Referee(
       id: map['id'],
       name: map['name'],
-      matchesIds: List<String>.from(map['matchesIds']),
     );
   }
 
@@ -17,7 +18,6 @@ class Referee {
     return {
       'id': id,
       'name': name,
-      'matchesIds': matchesIds,
     };
   }
 }

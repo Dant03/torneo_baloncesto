@@ -1,24 +1,23 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/championship.dart';
-import '../supabase_config.dart';
 
 class ChampionshipService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  static final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Championship>> getChampionships() async {
-    final response = await _client.from('championships').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Championship.fromMap(data)).toList();
-    } else {
+  static Future<List<Championship>> fetchChampionships() async {
+    final response = await _supabase.from('championships').select().execute();
+    if (response.error != null) {
       throw response.error!;
     }
+    return (response.data as List)
+        .map((json) => Championship.fromMap(json))
+        .toList();
   }
 
-  Future<void> createChampionship(String name) async {
-    final response = await _client.from('championships').insert({
-      'name': name,
-    }).execute();
+  static Future<void> createChampionship(Championship championship) async {
+    final response = await _supabase.from('championships').insert(championship.toMap()).execute();
     if (response.error != null) {
+      print('Error inserting championship: ${response.error!.message}');
       throw response.error!;
     }
   }

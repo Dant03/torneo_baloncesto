@@ -1,125 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as flutter_provider;
 import 'package:email_validator/email_validator.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
-
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedRole = 'Jugador';
-  bool _isEmailValid = false;
+  final _confirmPasswordController = TextEditingController();
 
-  void _validateEmail(String email) {
-    setState(() {
-      _isEmailValid = EmailValidator.validate(email);
-    });
-  }
+  void _register() async {
+    final name = _nameController.text;
+    final email = _emailController.text;
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-  void _register(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.signUpWithEmail(
-      _emailController.text,
-      _passwordController.text,
-      _selectedRole,
-    ).then((_) {
-      if (authProvider.user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.error ?? 'Error al registrarse')),
-        );
-      }
-    });
-  }
+    if (!EmailValidator.validate(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, ingresa un correo electrónico válido.')),
+      );
+      return;
+    }
 
-  void _navigateToLogin() {
-    Navigator.pushReplacementNamed(context, '/login');
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Las contraseñas no coinciden')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres.')),
+      );
+      return;
+    }
+
+    final authProvider = flutter_provider.Provider.of<AuthProvider>(context, listen: false);
+    
+    try {
+      await authProvider.register(name: name, email: email, password: password);
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${error.toString()}')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.network(
-              'https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg?t=2024-06-05T06%3A06%3A18.729Z',
-              fit: BoxFit.cover,
-            ),
+      appBar: AppBar(
+        title: Text('Crear Cuenta'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage('https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg?t=2024-06-05T06%3A06%3A18.729Z'),
+            fit: BoxFit.cover,
           ),
-          Center(
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.network(
-                    'https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/logo.png?t=2024-06-05T06%3A06%3A39.858Z',
-                    height: 100,
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
                   ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
+                  TextField(
                     controller: _emailController,
-                    labelText: 'Email',
-                    onChanged: _validateEmail,
+                    decoration: InputDecoration(
+                      labelText: 'Correo electrónico',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
                   ),
-                  if (!_isEmailValid && _emailController.text.isNotEmpty)
-                    const Text('Correo electrónico no válido', style: TextStyle(color: Colors.red)),
-                  CustomTextField(
+                  TextField(
                     controller: _passwordController,
-                    labelText: 'Password',
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: true,
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButton<String>(
-                    value: _selectedRole,
-                    items: <String>['Administrador', 'Entrenador', 'Jugador']
-                        .map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedRole = newValue!;
-                      });
-                    },
+                  TextField(
+                    controller: _confirmPasswordController,
+                    decoration: InputDecoration(
+                      labelText: 'Confirmar contraseña',
+                      labelStyle: TextStyle(color: Colors.white),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    obscureText: true,
                   ),
-                  const SizedBox(height: 16),
-                  CustomButton(
-                    text: 'Register',
-                    onPressed: () {
-                      if (_isEmailValid) {
-                        _register(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Correo electrónico no válido')),
-                        );
-                      }
-                    },
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                    ),
+                    child: Text('Registrarse', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: _navigateToLogin,
-                    child: const Text(
-                      'Ya tienes una cuenta? Iniciar sesión',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginScreen()));
+                    },
+                    child: Text('¿Ya tienes una cuenta? Inicia sesión aquí', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

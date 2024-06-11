@@ -1,16 +1,26 @@
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/match.dart';
-import '../supabase_config.dart';
 
 class MatchService {
-  final SupabaseClient _client = SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<Match>> getMatches() async {
-    final response = await _client.from('matches').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => Match.fromMap(data)).toList();
-    } else {
-      throw response.error!;
+  Future<MatchResponse> getMatches() async {
+    final response = await _supabase.from('matches').select().execute();
+
+    if (response.error != null) {
+      return MatchResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final matches = data.map((match) => Match.fromMap(match)).toList();
+
+    return MatchResponse(data: matches);
   }
+}
+
+class MatchResponse {
+  final List<Match>? data;
+  final PostgrestError? error;
+
+  MatchResponse({this.data, this.error});
 }

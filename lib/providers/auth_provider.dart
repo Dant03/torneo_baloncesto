@@ -1,76 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:supabase/supabase.dart' as supabase;
-import 'package:local_auth/local_auth.dart'; // Añadir la librería para autenticación biométrica
 import '../models/user.dart';
-import '../supabase_config.dart';
+import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final supabase.SupabaseClient _client = supabase.SupabaseClient(supabaseUrl, supabaseAnonKey);
-  User? user;
-  String? error;
+  final AuthService _authService = AuthService();
+  AppUser? _user;
 
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  AppUser? get user => _user;
 
-  Future<void> signUpWithEmail(String email, String password, String role) async {
-    final response = await _client.auth.signUp(email, password); // Corregir los parámetros aquí
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final response = await _authService.signUp(email, password, name);
     if (response.error == null) {
-      user = User(
-        id: response.user!.id,
-        email: email,
-        role: role,
-      );
-      await _client.from('users').insert(user!.toMap()).execute();
+      _user = response.data;
       notifyListeners();
     } else {
-      error = response.error!.message;
-      notifyListeners();
+      throw Exception(response.error ?? 'Error desconocido'); // Capturar mensaje de error detallado
     }
   }
 
-  Future<void> signInWithEmail(String email, String password) async {
-    final response = await _client.auth.signIn(email: email, password: password);
+  Future<void> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _authService.signIn(email, password);
     if (response.error == null) {
-      final userResponse = await _client
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .single()
-          .execute();
-      if (userResponse.error == null) {
-        user = User.fromMap(userResponse.data);
-        notifyListeners();
-      } else {
-        error = userResponse.error!.message;
-        notifyListeners();
-      }
+      _user = response.data;
+      notifyListeners();
     } else {
-      error = response.error!.message;
-      notifyListeners();
+      throw Exception(response.error ?? 'Error desconocido'); // Capturar mensaje de error detallado
     }
   }
 
-  Future<void> authenticateWithBiometrics() async {
-    try {
-      bool authenticated = await _localAuth.authenticate(
-        localizedReason: 'Please authenticate to login',
-        options: const AuthenticationOptions(
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
-      );
-      if (authenticated) {
-        // Aquí deberías definir la lógica de inicio de sesión después de la autenticación biométrica exitosa
-        notifyListeners();
-      }
-    } catch (e) {
-      error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  void signOut() {
-    _client.auth.signOut();
-    user = null;
+  Future<void> signOut() async {
+    await _authService.signOut();
+    _user = null;
     notifyListeners();
   }
 }

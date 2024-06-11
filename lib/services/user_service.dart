@@ -1,29 +1,26 @@
-import 'package:supabase/supabase.dart' as supabase;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user.dart';
-import '../supabase_config.dart';
 
 class UserService {
-  final supabase.SupabaseClient _client = supabase.SupabaseClient(supabaseUrl, supabaseAnonKey);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<User>> getUsers() async {
-    final response = await _client.from('users').select().execute();
-    if (response.error == null) {
-      return (response.data as List).map((data) => User.fromMap(data)).toList();
-    } else {
-      throw response.error!;
-    }
-  }
+  Future<UserResponse> getUsers() async {
+    final response = await _supabase.from('users').select().execute();
 
-  Future<void> createUser(String email, String password, String role) async {
-    final response = await _client.auth.signUp(email, password);
-    if (response.error == null && response.user != null) {
-      await _client.from('users').insert({
-        'id': response.user!.id,
-        'email': email,
-        'role': role,
-      }).execute();
-    } else {
-      throw response.error!;
+    if (response.error != null) {
+      return UserResponse(error: response.error);
     }
+
+    final data = response.data as List<dynamic>;
+    final users = data.map((user) => AppUser.fromMap(user)).toList();
+
+    return UserResponse(data: users);
   }
+}
+
+class UserResponse {
+  final List<AppUser>? data;
+  final PostgrestError? error;
+
+  UserResponse({this.data, this.error});
 }

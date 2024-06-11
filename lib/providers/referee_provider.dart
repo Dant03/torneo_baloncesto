@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/referee_service.dart';
 import '../models/referee.dart';
+import '../services/referee_service.dart';
 
 class RefereeProvider with ChangeNotifier {
   final RefereeService _refereeService = RefereeService();
@@ -9,7 +9,12 @@ class RefereeProvider with ChangeNotifier {
   List<Referee> get referees => _referees;
 
   Future<void> fetchReferees() async {
-    _referees = await _refereeService.getReferees();
-    notifyListeners();
+    final response = await _refereeService.getReferees();
+    if (response.error == null) {
+      _referees = response.data!;
+      notifyListeners();
+    } else {
+      throw Exception(response.error!.message);
+    }
   }
 }
