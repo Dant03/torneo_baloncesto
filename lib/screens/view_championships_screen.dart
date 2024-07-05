@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/championship_provider.dart';
 import '../models/championship.dart';
@@ -45,3 +45,4 @@ class ViewChampionshipsScreen extends StatelessWidget {
     );
   }
 }
+ */

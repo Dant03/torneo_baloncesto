@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/championship.dart';
 import '../providers/championship_provider.dart';
@@ -50,3 +50,4 @@ class ChampionshipScreen extends StatelessWidget {
     );
   }
 }
+ */

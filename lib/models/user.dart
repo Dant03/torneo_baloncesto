@@ -1,31 +1,31 @@
 class AppUser {
   final String id;
-  final String name;
+  final String nombre;
   final String email;
-  final String role;
+  final String rol;
 
   AppUser({
     required this.id,
-    required this.name,
+    required this.nombre,
     required this.email,
-    required this.role,
+    required this.rol,
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map) {
     return AppUser(
       id: map['id'],
-      name: map['name'],
+      nombre: map['nombre'],
       email: map['email'],
-      role: map['role'],
+      rol: map['rol'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': name,
+      'nombre': nombre,
       'email': email,
-      'role': role,
+      'rol': rol,
     };
   }
 }

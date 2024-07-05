@@ -1,35 +1,46 @@
 class Team {
-  final String id;
-  final String name;
-  final String championshipId;
-  final String categoryId;
-  final String coachId;
+  String? id;
+  final String nombre;
+  final String? logotipo;
+  final String? nombreCapitan;
+  final String? telefono;
+  final String? correo;
+  final DateTime? fechaCreacion;
+  final String? estado;
 
   Team({
-    required this.id,
-    required this.name,
-    required this.championshipId,
-    required this.categoryId,
-    required this.coachId,
+    this.id,
+    required this.nombre,
+    this.logotipo,
+    this.nombreCapitan,
+    this.telefono,
+    this.correo,
+    this.fechaCreacion,
+    this.estado,
   });
 
-  factory Team.fromMap(Map<String, dynamic> map) {
-    return Team(
-      id: map['id'],
-      name: map['name'],
-      championshipId: map['championship_id'],
-      categoryId: map['category_id'],
-      coachId: map['coach_id'],
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'nombre': nombre,
+      'logotipo': logotipo,
+      'nombre_capitan': nombreCapitan,
+      'telefono': telefono,
+      'correo': correo,
+      'fecha_creacion': fechaCreacion?.toIso8601String(),
+      'estado': estado,
+    };
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'championship_id': championshipId,
-      'category_id': categoryId,
-      'coach_id': coachId,
-    };
+  factory Team.fromJson(Map<String, dynamic> json) {
+    return Team(
+      id: json['id'],
+      nombre: json['nombre'],
+      logotipo: json['logotipo'],
+      nombreCapitan: json['nombre_capitan'],
+      telefono: json['telefono'],
+      correo: json['correo'],
+      fechaCreacion: DateTime.parse(json['fecha_creacion']),
+      estado: json['estado'],
+    );
   }
 }

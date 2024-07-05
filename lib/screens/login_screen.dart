@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as flutter_provider;
+import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
 import '../providers/auth_provider.dart';
 import 'home_screen.dart';
+import 'admin_dashboard_screen.dart'; // Asegúrate de importar la pantalla del administrador
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,11 +26,19 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final authProvider = flutter_provider.Provider.of<AuthProvider>(context, listen: false);
-    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
       await authProvider.login(email: email, password: password);
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+      if (authProvider.user?.rol == 'admin') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${error.toString()}')),
@@ -52,7 +61,8 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage('https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg?t=2024-06-05T06%3A06%3A18.729Z'),
+            image: NetworkImage(
+                'https://sezusjbiuccuqlyjjkud.supabase.co/storage/v1/object/public/ImagenesApp/background.jpg'),
             fit: BoxFit.cover,
           ),
         ),
@@ -91,7 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterScreen()));
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => RegisterScreen(),
+                      ));
                     },
                     child: Text('¿No tienes una cuenta? Regístrate aquí', style: TextStyle(color: Colors.white)),
                   ),

@@ -10,4 +10,4 @@ Future<void> initSupabase() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
-}
+} 

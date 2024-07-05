@@ -4,7 +4,7 @@ import '../models/user.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<AuthResponse> signUp(String email, String password, String name) async {
+  Future<AuthResponse> signUp(String email, String password, String nombre) async {
     final response = await _supabase.auth.signUp(email, password);
 
     if (response.error != null) {
@@ -18,7 +18,7 @@ class AuthService {
 
     final insertResponse = await _supabase.from('users').insert({
       'id': user.id,
-      'name': name,
+      'nombre': nombre,
       'email': email,
       'role': 'user',
     }).execute();
@@ -29,9 +29,9 @@ class AuthService {
 
     return AuthResponse(data: AppUser(
       id: user.id,
-      name: name,
+      nombre: nombre,
       email: email,
-      role: 'user',
+      rol: 'user',
     ));
   }
 

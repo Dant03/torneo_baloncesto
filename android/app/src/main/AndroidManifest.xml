@@ -24,6 +24,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
+        <!-- Añadir la meta-data para la clave de API de Google Maps -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDeS24DUcDHpcU187F_PlbYL0Gsl8Zgl3E"/>
     </application>
+    <!-- Permisos necesarios para Google Maps y acceso a Internet -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 </manifest>

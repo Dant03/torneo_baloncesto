@@ -17,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
 
   void _register() async {
-    final name = _nameController.text;
+    final nombre = _nameController.text;
     final email = _emailController.text;
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
@@ -46,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authProvider = flutter_provider.Provider.of<AuthProvider>(context, listen: false);
     
     try {
-      await authProvider.register(name: name, email: email, password: password);
+      await authProvider.register(nombre: nombre, email: email, password: password);
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(

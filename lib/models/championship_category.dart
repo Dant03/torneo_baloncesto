@@ -1,3 +1,4 @@
+// lib/models/championship_category.dart
 class ChampionshipCategory {
   final String id;
   final String championshipId;

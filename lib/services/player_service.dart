@@ -2,25 +2,55 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/player.dart';
 
 class PlayerService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _client = Supabase.instance.client;
 
-  Future<PlayerResponse> getPlayers() async {
-    final response = await _supabase.from('players').select().execute();
+  Future<List<Player>> getPlayers() async {
+    final response = await _client.from('jugadores').select().execute();
 
     if (response.error != null) {
-      return PlayerResponse(error: response.error);
+      throw response.error!;
     }
 
-    final data = response.data as List<dynamic>;
-    final players = data.map((player) => Player.fromMap(player)).toList();
-
-    return PlayerResponse(data: players);
+    final data = response.data as List;
+    return data.map((json) => Player.fromJson(json)).toList();
   }
-}
 
-class PlayerResponse {
-  final List<Player>? data;
-  final PostgrestError? error;
+  Future<String> createPlayer(Player player) async {
+    final response = await _client.from('jugadores').insert(player.toJson()).execute();
 
-  PlayerResponse({this.data, this.error});
+    if (response.error != null) {
+      throw response.error!;
+    }
+
+    final data = response.data as List;
+    return data[0]['id'] as String;
+  }
+
+  Future<List<Player>> fetchPlayersByTeamId(String teamId) async {
+    final response = await _client
+        .from('jugadores')
+        .select()
+        .eq('equipo_id', teamId)
+        .execute();
+
+    if (response.error != null) {
+      throw response.error!;
+    }
+
+    return (response.data as List)
+        .map((playerData) => Player.fromJson(playerData))
+        .toList();
+  }
+
+  Future<void> updatePlayer(Player player) async {
+    final response = await _client
+        .from('jugadores')
+        .update(player.toJson())
+        .eq('id', player.id)
+        .execute();
+
+    if (response.error != null) {
+      throw response.error!;
+    }
+  }
 }

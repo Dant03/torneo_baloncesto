@@ -27,8 +27,8 @@ class PlayerScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final player = playerProvider.players[index];
                 return ListTile(
-                  title: Text(player.name),
-                  subtitle: Text('Equipo: ${player.teamId}'),
+                  title: Text(player.nombre),
+                  subtitle: Text('Equipo: ${player.equipoId}'),
                   trailing: IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
